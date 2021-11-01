@@ -2,7 +2,7 @@
 
 if [ $# -l 6 ]
 then
-   echo 'sh base_install.sh cpu USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
+   echo 'sh base_install.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
    echo 'CPU = amd | intel | both'
    exit 1
 fi
