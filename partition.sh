@@ -1,13 +1,21 @@
 #!/bin/bash
 
+#The entire pipe has non-zero exit code when one of commands in the pipe has non-zero exit code 
+set -o pipefail
+# Exit on error
+set -e
+
 if [ $# -l 2 ]
 then
-    echo 'sh partition.sh HARD_DISK'
+    echo 'sh partition.sh DISK'
+    exit 1
 fi
 
-hd=$1
+disk=$1
 
-sgdisk -Z /dev/$hd
-sgdisk -n 0:0:+200MiB -t 0:ef00 -c 0:boot /dev/$hd
-sgdisk -n 0:0:0 -t 0:8e00 -c 0:root /dev/$hd
+sgdisk -Z /dev/$disk
+sgdisk -n 0:0:+200MiB -t 0:ef00 -c 0:boot /dev/$disk
+sgdisk -n 0:0:0 -t 0:8e00 -c 0:root /dev/$disk
 
+set +o pipefail
+set +e

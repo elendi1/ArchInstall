@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#The entire pipe has non-zero exit code when one of commands in the pipe has non-zero exit code 
+set -o pipefail
+# Exit on error
+set -e
+
 if [ $# -l 6 ]
 then
    echo 'sh base_install.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
@@ -20,7 +25,7 @@ elif [ "$cpu" == 'intel' ]; then
 elif [ "$cpu" == 'both' ]; then
     ucode='amd-ucode intel-ucode'
 else
-    echo 'sh base_install.sh cpu USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
+    echo 'sh base_install.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
     echo 'CPU = amd | intel | both'
     exit 1
 fi
@@ -67,20 +72,20 @@ ln -sf /usr/share/zoneinfo/Europe/Rome /etc/localtime
 hwclock --systohc
 
 # Setting up locale
-sed -i 's/#it_IT.UTF-8 UTF-8/it_IT.UTF-8 UTF-8' /etc/locale.gen
+sed -i 's/#it_IT.UTF-8 UTF-8/it_IT.UTF-8 UTF-8/' /etc/locale.gen
 locale-gen
 echo 'LANG=it_IT.UTF-8' >> /etc/locale.conf
 echo 'KEYMAP=it' >> /etc/vconsole.conf 
 
 # Setting up hostname
 echo $hostname > /etc/hostname 
-echo "127.0.0.1    localhost\n::1          localhost\n127.0.1.1    $hostname.localdomain    $hostname" >> /etc/hosts
+echo -e "127.0.0.1    localhost\n::1          localhost\n127.0.1.1    $hostname.localdomain    $hostname" >> /etc/hosts
 
 # Changing root password
 passwd
 
-# pulseaudio-bluetooth ? network-manager-applet
-pacman -S grub efibootmgr networkmanager wireless-tools wpa_supplicant dialog os-prober mtools dosfstools ntfs-3g base-devel linux-headers git reflector bluez bluez-utils cups xdg-utils xdg-user-dirs sudo
+# Installing base packages
+pacman -Sy grub efibootmgr networkmanager wireless_tools wpa_supplicant dialog os-prober mtools dosfstools ntfs-3g base-devel linux-headers git reflector bluez bluez-utils cups xdg-utils xdg-user-dirs
 
 # Modifying mkinitcpio to set up lvm
 sed -i -E "s/^HOOKS=\((.*?) autodetect/HOOKS=\(\1 autodetect keyboard keymap/" /etc/mkinitcpio.conf
@@ -92,21 +97,25 @@ grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
 # Getting UUID of enc_part
 enc_part_uuid=$(blkid | grep $enc_part | cut -d'"' -f2)
 # Modifying grug config for lvm
-sed  "s#GRUB_CMDLINE_LINUX=[\"][\"]#GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=$enc_part_uuid\:cryptlvm root=/dev/vg1/root\"#" /etc/default/grub
+sed -i "s#GRUB_CMDLINE_LINUX=[\"][\"]#GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=$enc_part_uuid\:cryptlvm root=/dev/vg1/root\"#" /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
 # Enabling NetworkManager, bluetooth and cups
 systemctl enable NetworkManager
 systemctl enable bluetooth
-systemctl enable org.cups.cupsd
+systemctl enable cupsd
 
 # Adding user
 useradd -m $username
 passwd $username
 usermod -aG wheel,audio,video,optical,storage $username
-
-sed -i "s/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL" /etc/sudoers
+# Users of the wheel group can execute all commands
+sed -i "s/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/" /etc/sudoers
 
 localectl set-keymap --no-convert it
 
 umount -a
+exit
+
+set +o pipefail
+set +e
