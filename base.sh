@@ -7,7 +7,7 @@ set -e
 
 if [ $# -l 6 ]
 then
-   echo 'bash base_install.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
+   echo 'bash base.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
    echo 'CPU = amd | intel | both'
    exit 1
 fi
@@ -25,7 +25,7 @@ elif [ "$cpu" == 'intel' ]; then
 elif [ "$cpu" == 'both' ]; then
    ucode='amd-ucode intel-ucode'
 else
-   echo 'bash base_install.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
+   echo 'bash base.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
    echo 'CPU = amd | intel | both'
    exit 1
 fi
@@ -118,9 +118,9 @@ umount -a
 exit
 
 # Copying ArchInstall folder into the previous chroot folder
-mkdir /mnt/home/elendil/Projects
-cp ../ArchInstall /mnt/home/elendil/Projects
-chgrp -R /mnt/home/elendil/Projects
+mkdir /mnt/home/$username/Projects
+cp -r ../ArchInstall /mnt/home/$username/Projects
+chgrp -R /mnt/home/$username/Projects
 
 echo 'Now please reboot before running extra.sh'
 
