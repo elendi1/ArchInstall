@@ -7,8 +7,8 @@ set -e
 
 if [ $# -l 2 ]
 then
-    echo 'sh partition.sh DISK'
-    exit 1
+   echo 'bash partition.sh DISK'
+   exit 1
 fi
 
 disk=$1

@@ -7,7 +7,7 @@ set -e
 
 if [ $# -l 6 ]
 then
-   echo 'sh base_install.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
+   echo 'bash base_install.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
    echo 'CPU = amd | intel | both'
    exit 1
 fi
@@ -19,15 +19,15 @@ enc_part=$4
 boot_part=$5
 
 if [ "$cpu" == 'amd' ]; then
-    ucode='amd-ucode'
+   ucode='amd-ucode'
 elif [ "$cpu" == 'intel' ]; then
-    ucode='intel-ucode'
+   ucode='intel-ucode'
 elif [ "$cpu" == 'both' ]; then
-    ucode='amd-ucode intel-ucode'
+   ucode='amd-ucode intel-ucode'
 else
-    echo 'sh base_install.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
-    echo 'CPU = amd | intel | both'
-    exit 1
+   echo 'bash base_install.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
+   echo 'CPU = amd | intel | both'
+   exit 1
 fi
 
 # Setting up keyboard and time 
@@ -117,5 +117,13 @@ localectl set-keymap --no-convert it
 umount -a
 exit
 
+# Copying ArchInstall folder into the previous chroot folder
+mkdir /mnt/home/elendil/Projects
+cp ../ArchInstall /mnt/home/elendil/Projects
+chgrp -R /mnt/home/elendil/Projects
+
+echo 'Now please reboot before running extra.sh'
+
 set +o pipefail
 set +e
+
