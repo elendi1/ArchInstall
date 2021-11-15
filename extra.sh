@@ -16,11 +16,11 @@ gpu=$1
 
 if [ "$gpu" == 'amd' ]; then
    gpu_drivers='xf86-video-amdgpu vulkan-radeon'
-elif [ "$cpu" == 'nvidia' ]; then
+elif [ "$gpu" == 'nvidia' ]; then
    gpu_drivers='xf86-video-nouveau'
-elif [ "$cpu" == 'intel' ]; then
+elif [ "$gpu" == 'intel' ]; then
    gpu_drivers='xf86-video-intel'
-elif [ "$cpu" == 'all' ]; then
+elif [ "$gpu" == 'all' ]; then
    gpu_drivers='xf86-video-vesa xf86-video-ati xf86-video-intel xf86-video-amdgpu xf86-video-nouveau xf86-video-fbdev'
 else
    echo 'bash extra.sh GPU GIT_USERNAME GIT_EMAIL'
