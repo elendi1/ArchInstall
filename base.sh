@@ -5,10 +5,13 @@ set -o pipefail
 # Exit on error
 set -e
 
-if [ $# -l 6 ]
+if [ $# -l 7 ]
 then
-   echo 'bash base.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
+   echo 'bash base.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION EFI_PARTITION BIOS_DEVICE'
    echo 'CPU = amd | intel | both'
+   echo 'EFI_PARTITION can be "null" for a pure BIOS system'
+   echo 'BIOS_PARTITION can be "null" for a pure EFI system'
+   echo 'Set both EFI_PARTITION and BIOS_PARTITION to select an hybrid MBR'
    exit 1
 fi
 
@@ -17,6 +20,7 @@ username=$2
 hostname=$3
 enc_part=$4
 boot_part=$5
+bios_dev=$6
 
 if [ "$cpu" == 'amd' ]; then
    ucode='amd-ucode'
@@ -25,7 +29,7 @@ elif [ "$cpu" == 'intel' ]; then
 elif [ "$cpu" == 'both' ]; then
    ucode='amd-ucode intel-ucode'
 else
-   echo 'bash base.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION BOOT_PARTITION'
+   echo 'bash base.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION EFI_PARTITION BIOS_DEVICE'
    echo 'CPU = amd | intel | both'
    exit 1
 fi
@@ -48,14 +52,19 @@ lvcreate -L 16G vg1 -n swap
 lvcreate -l 100%FREE vg1 -n root
 
 # Formatting boot and root partitions and making swap
-mkfs.fat -F32 /dev/$boot_part
+if [ "$efi_part" != 'null' ]; then
+   mkfs.fat -F32 /dev/$efi_part
+done
 mkfs.ext4 /dev/vg1/root
 mkswap /dev/vg1/swap
 
 # Mounting the root partition in /mnt and the boot partition in /mnt/boot
 mount /dev/vg1/root /mnt
 mkdir /mnt/boot
-mount /dev/$boot_part /mnt/boot
+if [ "$efi_part" != 'null' ]; then
+   mkdir /mnt/boot/EFI
+   mount /dev/$efi_part /mnt/boot/EFI
+done
 # Enabling swap
 swapon /dev/vg1/swap
 
@@ -93,7 +102,12 @@ sed -i -E "s/^HOOKS=\((.*?) block/HOOKS=\(\1 block encrypt lvm2/" /etc/mkinitcpi
 mkinitcpio -p linux
 
 # Installing grub
-grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB 
+if [ "$efi_part" != 'null' ]; then
+   grub-install --target=x86_64-efi --recheck --removable --efi-directory=/mnt/boot/EFI --boot-directory=/mnt/boot
+done
+if [ "$bios_dev" != 'null' ]; then
+   grub-install --target=i386-pc --recheck --boot-directory=/mnt/boot /dev/$bios_dev
+done
 # Getting UUID of enc_part
 enc_part_uuid=$(blkid | grep $enc_part | cut -d'"' -f2)
 # Modifying grug config for lvm
@@ -126,4 +140,3 @@ echo 'Now please reboot before running extra.sh'
 
 set +o pipefail
 set +e
-
