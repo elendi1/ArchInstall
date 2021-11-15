@@ -97,8 +97,18 @@ passwd
 pacman -Sy grub efibootmgr networkmanager wireless_tools wpa_supplicant dialog os-prober mtools dosfstools ntfs-3g base-devel linux-headers git reflector bluez bluez-utils cups xdg-utils xdg-user-dirs
 
 # Modifying mkinitcpio to set up lvm
-sed -i -E "s/^HOOKS=\((.*?) autodetect/HOOKS=\(\1 autodetect keyboard keymap/" /etc/mkinitcpio.conf
-sed -i -E "s/^HOOKS=\((.*?) block/HOOKS=\(\1 block encrypt lvm2/" /etc/mkinitcpio.conf
+# Removing keyboard hook. It will be moved before
+sed -i -E "s/^HOOKS=\((.*?) keyboard/HOOKS=\(\1/" /etc/mkinitcpio.conf
+if [[ "$efi_part" != 'null' && "$bios_dev" != 'null' ]]; then # Installation on usb media
+   # Adding encrypt and lvm2 to support encryption. Block is to be moved before autodetect, to avoid shrinking
+   sed -i -E "s/^HOOKS=\((.*?) block/HOOKS=\(\1 encrypt lvm2/" /etc/mkinitcpio.conf
+   # Adding block and keyboard before autodetect, avoiding shrinking them
+   # Adding also keymap to read the keyboard map in /etc/vconsole.conf
+   sed -i -E "s/^HOOKS=\((.*?) autodetect/HOOKS=\(\1 block keyboard autodetect keymap/" /etc/mkinitcpio.conf
+else
+   sed -i -E "s/^HOOKS=\((.*?) autodetect/HOOKS=\(\1 autodetect keyboard keymap/" /etc/mkinitcpio.conf
+   sed -i -E "s/^HOOKS=\((.*?) block/HOOKS=\(\1 block encrypt lvm2/" /etc/mkinitcpio.conf
+done
 mkinitcpio -p linux
 
 # Installing grub
