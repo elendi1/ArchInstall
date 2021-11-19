@@ -59,7 +59,7 @@ mkinitcpio -p linux
 # Installing grub
 if [ "$efi_part" != 'null' ]; then
    mkdir /boot/EFI
-   mount /dev/$efi_part /mnt/boot/EFI
+   mount /dev/$efi_part /boot/EFI
    grub-install --target=x86_64-efi --recheck --removable --efi-directory=/boot/EFI --boot-directory=/boot
 fi
 if [ "$bios_dev" != 'null' ]; then

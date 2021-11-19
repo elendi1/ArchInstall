@@ -72,15 +72,19 @@ genfstab -U /mnt >> /mnt/etc/fstab
 
 # Copying chroot.sh into /mnt/tmp/
 cp chroot.sh /mnt/
+chmod +x /mnt/chroot.sh
 # Chrooting into installation
 arch-chroot /mnt ./chroot.sh $username $hostname $enc_part $efi_part $bios_dev
+# Removing chroot.sh
+rm /mnt/chroot.sh
 
 # Copying ArchInstall folder into the previous chroot folder
 mkdir /mnt/home/$username/Projects
 cp -r ../ArchInstall /mnt/home/$username/Projects
-chgrp -R /mnt/home/$username/Projects
 
-echo 'Now please reboot before running extra.sh'
+echo 'Now please reboot'
+echo "Run: sudo chgrp -R $username /home/$username/Projects"
+echo 'Then run: /home/username/Projects/extra.sh'
 
 set +o pipefail
 set +e

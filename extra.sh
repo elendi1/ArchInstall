@@ -5,7 +5,7 @@ set -o pipefail
 # Exit on error
 set -e
 
-if [ $# -l 4 ]
+if [ $# -lt 3 ]
 then
    echo 'bash extra.sh GPU GIT_USERNAME GIT_EMAIL'
    echo 'GPU = amd | nvidia | intel | all'
@@ -13,6 +13,8 @@ then
 fi
 
 gpu=$1
+git_username=$2
+git_email=$3
 
 if [ "$gpu" == 'amd' ]; then
    gpu_drivers='xf86-video-amdgpu vulkan-radeon'
@@ -30,8 +32,8 @@ fi
 
 # Configuring git
 git config --global init.defaultBranch main
-git config --global user.name "$GIT_USERNAME"
-git config --global user.email "$GIT_EMAIL"
+git config --global user.name "$git_username"
+git config --global user.email "$git_email"
 git config --global credential.helper store
 
 # Installing paru
@@ -68,7 +70,7 @@ systemctl --user enable pipewire.service
 sudo pacman -S pavucontrol
 
 # Installing basic applications
-paru -S firefox ranger neovim-git
+pacman -S firefox ranger neovim
 
 # Optionally installing some gui based applications
 #paru -S nitrogen lxappearance lxsession pcmanfm-gtk3

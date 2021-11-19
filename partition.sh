@@ -5,7 +5,7 @@ set -o pipefail
 # Exit on error
 set -e
 
-if [ $# -l 3 ]
+if [ $# -lt 2 ]
 then
    echo 'bash partition.sh DISK MBR'
    echo 'MBR = efi | bios | hybrid'
@@ -34,7 +34,7 @@ else
    echo 'bash partition.sh DISK MBR'
    echo 'MBR = efi | bios | hybrid'
    exit 1
-done
+fi
 
 set +o pipefail
 set +e
