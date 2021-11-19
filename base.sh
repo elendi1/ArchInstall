@@ -5,13 +5,13 @@ set -o pipefail
 # Exit on error
 set -e
 
-if [ $# -l 7 ]
-then
-   echo 'bash base.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION EFI_PARTITION BIOS_DEVICE'
+if [ $# -lt 7 ]; then
+   echo 'bash base.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION EFI_PARTITION BIOS_DEVICE SWAP_SIZE'
    echo 'CPU = amd | intel | both'
    echo 'EFI_PARTITION can be "null" for a pure BIOS system'
    echo 'BIOS_PARTITION can be "null" for a pure EFI system'
    echo 'Set both EFI_PARTITION and BIOS_PARTITION to select an hybrid MBR'
+   echo 'SWAP_SIZE example: 16G'
    exit 1
 fi
 
@@ -19,8 +19,9 @@ cpu=$1
 username=$2
 hostname=$3
 enc_part=$4
-boot_part=$5
+efi_part=$5
 bios_dev=$6
+swap_size=$7
 
 if [ "$cpu" == 'amd' ]; then
    ucode='amd-ucode'
@@ -54,17 +55,13 @@ lvcreate -l 100%FREE vg1 -n root
 # Formatting boot and root partitions and making swap
 if [ "$efi_part" != 'null' ]; then
    mkfs.fat -F32 /dev/$efi_part
-done
+fi
 mkfs.ext4 /dev/vg1/root
 mkswap /dev/vg1/swap
 
-# Mounting the root partition in /mnt and the boot partition in /mnt/boot
+# Mounting the root partition in /mnt and creating boot directory 
 mount /dev/vg1/root /mnt
 mkdir /mnt/boot
-if [ "$efi_part" != 'null' ]; then
-   mkdir /mnt/boot/EFI
-   mount /dev/$efi_part /mnt/boot/EFI
-done
 # Enabling swap
 swapon /dev/vg1/swap
 
@@ -72,74 +69,11 @@ swapon /dev/vg1/swap
 pacstrap /mnt base linux linux-firmware $ucode lvm2
 # Generate filesystem table
 genfstab -U /mnt >> /mnt/etc/fstab
+
+# Copying chroot.sh into /mnt/tmp/
+cp chroot.sh /mnt/
 # Chrooting into installation
-arch-chroot /mnt
-
-# Setting up localization
-ln -sf /usr/share/zoneinfo/Europe/Rome /etc/localtime
-# Syncronize hardware clock to system clock
-hwclock --systohc
-
-# Setting up locale
-sed -i 's/#it_IT.UTF-8 UTF-8/it_IT.UTF-8 UTF-8/' /etc/locale.gen
-locale-gen
-echo 'LANG=it_IT.UTF-8' >> /etc/locale.conf
-echo 'KEYMAP=it' >> /etc/vconsole.conf 
-
-# Setting up hostname
-echo $hostname > /etc/hostname 
-echo -e "127.0.0.1    localhost\n::1          localhost\n127.0.1.1    $hostname.localdomain    $hostname" >> /etc/hosts
-
-# Changing root password
-passwd
-
-# Installing base packages
-pacman -Sy grub efibootmgr networkmanager wireless_tools wpa_supplicant dialog os-prober mtools dosfstools ntfs-3g base-devel linux-headers git reflector bluez bluez-utils cups xdg-utils xdg-user-dirs
-
-# Modifying mkinitcpio to set up lvm
-# Removing keyboard hook. It will be moved before
-sed -i -E "s/^HOOKS=\((.*?) keyboard/HOOKS=\(\1/" /etc/mkinitcpio.conf
-if [[ "$efi_part" != 'null' && "$bios_dev" != 'null' ]]; then # Installation on usb media
-   # Adding encrypt and lvm2 to support encryption. Block is to be moved before autodetect, to avoid shrinking
-   sed -i -E "s/^HOOKS=\((.*?) block/HOOKS=\(\1 encrypt lvm2/" /etc/mkinitcpio.conf
-   # Adding block and keyboard before autodetect, avoiding shrinking them
-   # Adding also keymap to read the keyboard map in /etc/vconsole.conf
-   sed -i -E "s/^HOOKS=\((.*?) autodetect/HOOKS=\(\1 block keyboard autodetect keymap/" /etc/mkinitcpio.conf
-else
-   sed -i -E "s/^HOOKS=\((.*?) autodetect/HOOKS=\(\1 autodetect keyboard keymap/" /etc/mkinitcpio.conf
-   sed -i -E "s/^HOOKS=\((.*?) block/HOOKS=\(\1 block encrypt lvm2/" /etc/mkinitcpio.conf
-done
-mkinitcpio -p linux
-
-# Installing grub
-if [ "$efi_part" != 'null' ]; then
-   grub-install --target=x86_64-efi --recheck --removable --efi-directory=/mnt/boot/EFI --boot-directory=/mnt/boot
-done
-if [ "$bios_dev" != 'null' ]; then
-   grub-install --target=i386-pc --recheck --boot-directory=/mnt/boot /dev/$bios_dev
-done
-# Getting UUID of enc_part
-enc_part_uuid=$(blkid | grep $enc_part | cut -d'"' -f2)
-# Modifying grug config for lvm
-sed -i "s#GRUB_CMDLINE_LINUX=[\"][\"]#GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=$enc_part_uuid\:cryptlvm root=/dev/vg1/root\"#" /etc/default/grub
-grub-mkconfig -o /boot/grub/grub.cfg
-
-# Enabling NetworkManager, bluetooth and cups
-systemctl enable NetworkManager
-systemctl enable bluetooth
-systemctl enable cupsd
-
-# Adding user
-useradd -m $username
-passwd $username
-usermod -aG wheel,audio,video,optical,storage $username
-# Users of the wheel group can execute all commands
-sed -i "s/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/" /etc/sudoers
-
-localectl set-keymap --no-convert it
-
-umount -a
-exit
+arch-chroot /mnt ./chroot.sh $username $hostname $enc_part $efi_part $bios_dev
 
 # Copying ArchInstall folder into the previous chroot folder
 mkdir /mnt/home/$username/Projects
