@@ -47,8 +47,8 @@ cryptsetup open /dev/$enc_part cryptlvm
 pvcreate /dev/mapper/cryptlvm
 # Creating the volume group
 vgcreate vg1 /dev/mapper/cryptlvm
-# Creating a swap logical volume of 16GB
-lvcreate -L 16G vg1 -n swap
+# Creating a swap logical volume of swap_size
+lvcreate -L $swap_size vg1 -n swap
 # Creating a root logical volume with the remaining space
 lvcreate -l 100%FREE vg1 -n root
 
@@ -59,9 +59,10 @@ fi
 mkfs.ext4 /dev/vg1/root
 mkswap /dev/vg1/swap
 
-# Mounting the root partition in /mnt and creating boot directory 
+# Mounting the root partition in /mnt and mounting efi partition in /mnt/boot
 mount /dev/vg1/root /mnt
 mkdir /mnt/boot
+mount /dev/$efi_part /mnt/boot
 # Enabling swap
 swapon /dev/vg1/swap
 
