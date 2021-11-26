@@ -80,12 +80,14 @@ arch-chroot /mnt ./chroot.sh $username $hostname $enc_part $efi_part $bios_dev
 rm /mnt/chroot.sh
 
 # Copying ArchInstall folder into the previous chroot folder
-mkdir /mnt/home/$username/Projects
+mkdir /mnt/home/$username/Progetti
 cp -r ../ArchInstall /mnt/home/$username/Projects
 
 echo 'Now please reboot'
-echo "Run: sudo chgrp -R $username /home/$username/Projects"
-echo 'Then run: /home/username/Projects/extra.sh'
+echo "Run:\n"
+echo "1) sudo chgrp -R $username /home/$username/Progetti"
+echo "2) sudo chown -R $username /home/$username/Progetti"
+echo '3) bash  ~/Progetti/extra.sh'
 
 set +o pipefail
 set +e
