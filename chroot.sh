@@ -9,8 +9,8 @@ if [ $# -lt 5 ]; then
    echo 'bash chroot.sh USERNAME HOSTNAME ENCRYPTED_PARTITION EFI_PARTITION BIOS_DEVICE'
    echo 'CPU = amd | intel | both'
    echo 'EFI_PARTITION can be "null" for a pure BIOS system'
-   echo 'BIOS_PARTITION can be "null" for a pure EFI system'
-   echo 'Set both EFI_PARTITION and BIOS_PARTITION to select an hybrid MBR'
+   echo 'BIOS_DEVICE can be "null" for a pure EFI system'
+   echo 'Set both EFI_PARTITION and BIOS_DEVICE to select an hybrid MBR'
    exit 1
 fi
 
@@ -27,8 +27,9 @@ hwclock --systohc
 
 # Setting up locale
 sed -i 's/#it_IT.UTF-8 UTF-8/it_IT.UTF-8 UTF-8/' /etc/locale.gen
+sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
 locale-gen
-echo 'LANG=it_IT.UTF-8' >> /etc/locale.conf
+echo 'LANG=en_US.UTF-8' >> /etc/locale.conf
 echo 'KEYMAP=it' >> /etc/vconsole.conf 
 
 # Setting up hostname
@@ -39,7 +40,7 @@ echo -e "127.0.0.1    localhost\n::1          localhost\n127.0.1.1    $hostname.
 passwd
 
 # Installing base packages
-pacman -Sy grub efibootmgr networkmanager wireless_tools wpa_supplicant dialog os-prober mtools dosfstools ntfs-3g base-devel linux-headers git reflector bluez bluez-utils cups xdg-utils xdg-user-dirs
+pacman -Sy grub efibootmgr networkmanager wireless_tools wpa_supplicant dialog os-prober mtools dosfstools ntfs-3g base-devel linux-headers git reflector bluez bluez-utils cups
 
 # Modifying mkinitcpio to set up lvm
 # Removing keyboard hook. It will be moved before
