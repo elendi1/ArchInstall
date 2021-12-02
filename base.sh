@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#The entire pipe has non-zero exit code when one of commands in the pipe has non-zero exit code 
+# The entire pipe has non-zero exit code when one of commands in the pipe has non-zero exit code 
 set -o pipefail
 # Exit on error
 set -e
@@ -9,8 +9,8 @@ if [ $# -lt 3 ]; then
    echo 'bash base.sh BOOT_MODE BOOT_PARTITION ENCRYPTED_PARTITION [EFI_PARTITION]'
    echo 'BOOT_MODE = uefi | bios | hybrid'
    echo 'BOOT_PARTITION is the unencrypted partition where /boot is mounted. Can be equal to EFI_PARTITION'
-   echo 'ENCRYPTED_PARTITION is the encrypted partition where / and swap will be created'
-   echo 'EFI_PARTITION must be specified only for a pure uefi and hybrid boot mode'
+   echo 'ENCRYPTED_PARTITION is the partition used as encrypted container for the / and swap logical volumes'
+   echo 'EFI_PARTITION is EFI system partition that must be specified only for uefi/hybrid boot mode'
    exit 1
 fi
 
@@ -33,7 +33,6 @@ elif [ "$boot_mode" == 'bios' ]; then
       exit 1
    fi
 fi
-
 
 # Setting up keyboard and time 
 loadkeys it

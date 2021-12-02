@@ -8,7 +8,7 @@ set -e
 if [ $# -lt 2 ]; then
    echo 'bash chroot.sh BOOT_MODE ENCRYPTED_PARTITION [EFI_MNT]'
    echo 'BOOT_MODE = uefi | bios | hybrid'
-   echo 'ENCRYPTED_PARTITION is the encrypted partition where / and swap were created'
+   echo 'ENCRYPTED_PARTITION is the partition used as encrypted container for the / and swap logical volumes'
    echo 'EFI_MNT is the folder where EFI was mounted'
    exit 1
 fi
@@ -26,11 +26,12 @@ if [[ "$boot_mode" == 'uefi' or "$boot_mode" == 'hybrid' ]]; then
    fi
    efi_mnt=$3
 elif [ "$boot_mode" == 'bios' ]; then
-   if [ $# -gt 3 ]; then
+   if [ $# -gt 2 ]; then
       echo 'Too many parameters'
       exit 1
    fi
 fi
+
 # Setting up localization
 ln -sf /usr/share/zoneinfo/Europe/Rome /etc/localtime
 # Syncronize hardware clock to system clock

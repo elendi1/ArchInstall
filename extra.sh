@@ -53,6 +53,7 @@ sudo pacman -Syu zsh zsh-syntax-highlighting zsh-autosuggestions
 chsh -s $(which zsh)
 # Installing command line utilities
 sudo pacman -S z fzf fd ripgrep atool xsel ueberzug htop curl wget rsync broot tree clipmenu
+systemctl --user enable clipmenud
 paru -S up-bin
 
 # Installing basic fonts
@@ -79,12 +80,12 @@ pacman -S firefox ranger neovim
 # Installing suckless tools
 cd ~/Projects
 git clone https://github.com/elendi1/dwm.git
-git clone https://github.com/elendi1/dwmblocks.git
+git clone https://github.com/elendi1/dwmstatus.git
 git clone https://github.com/elendi1/dmenu.git
 git clone https://github.com/elendi1/st.git
 cd dwm
 sudo make clean install
-cd ../dwmblocks
+cd ../dwmstatus
 sudo make clean install
 cd ../dmenu
 sudo make clean install
@@ -96,7 +97,7 @@ cd
 cd Projects
 git clone https://github.com/elendi1/Dots.git
 cd Dots
-stow -t ~ fontconfig tmux x_$resolution zsh
+stow -t ~ fontconfig tmux x_$resolution zsh gtk 
 cd
 
 set +o pipefail
