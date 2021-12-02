@@ -5,21 +5,32 @@ set -o pipefail
 # Exit on error
 set -e
 
-if [ $# -lt 5 ]; then
-   echo 'bash chroot.sh USERNAME HOSTNAME ENCRYPTED_PARTITION EFI_PARTITION BIOS_DEVICE'
-   echo 'CPU = amd | intel | both'
-   echo 'EFI_PARTITION can be "null" for a pure BIOS system'
-   echo 'BIOS_DEVICE can be "null" for a pure EFI system'
-   echo 'Set both EFI_PARTITION and BIOS_DEVICE to select an hybrid MBR'
+if [ $# -lt 2 ]; then
+   echo 'bash chroot.sh BOOT_MODE ENCRYPTED_PARTITION [EFI_MNT]'
+   echo 'BOOT_MODE = uefi | bios | hybrid'
+   echo 'ENCRYPTED_PARTITION is the encrypted partition where / and swap were created'
+   echo 'EFI_MNT is the folder where EFI was mounted'
    exit 1
 fi
 
-username=$1
-hostname=$2
-enc_part=$3
-efi_part=$4
-bios_dev=$5
+boot_mode=$1
+enc_part=$2
 
+if [[ "$boot_mode" == 'uefi' or "$boot_mode" == 'hybrid' ]]; then
+   if [ $# -lt 3 ]; then
+      echo 'Required EFI_MNT for uefi/hybrid boot mode'
+      exit 1
+   elif [ $# -gt 3 ]; then
+      echo 'Too many parameters'
+      exit 1
+   fi
+   efi_mnt=$3
+elif [ "$boot_mode" == 'bios' ]; then
+   if [ $# -gt 3 ]; then
+      echo 'Too many parameters'
+      exit 1
+   fi
+fi
 # Setting up localization
 ln -sf /usr/share/zoneinfo/Europe/Rome /etc/localtime
 # Syncronize hardware clock to system clock
@@ -32,6 +43,8 @@ locale-gen
 echo 'LANG=en_US.UTF-8' >> /etc/locale.conf
 echo 'KEYMAP=it' >> /etc/vconsole.conf 
 
+read -p "Hostname (default=arch): " hostname 
+hostname=${hostname:-arch}
 # Setting up hostname
 echo $hostname > /etc/hostname 
 echo -e "127.0.0.1    localhost\n::1          localhost\n127.0.1.1    $hostname.localdomain    $hostname" > /etc/hosts
@@ -45,7 +58,7 @@ pacman -Sy grub efibootmgr networkmanager wireless_tools wpa_supplicant dialog o
 # Modifying mkinitcpio to set up lvm
 # Removing keyboard hook. It will be moved before
 sed -i -E "s/^HOOKS=\((.*?) keyboard/HOOKS=\(\1/" /etc/mkinitcpio.conf
-if [[ "$efi_part" != 'null' && "$bios_dev" != 'null' ]]; then # Installation on usb media
+if [ "$boot_mode" == 'hybrid' ]; then # Installation on usb media
    # Adding encrypt and lvm2 to support encryption. Block is to be moved before autodetect, to avoid shrinking
    sed -i -E "s/^HOOKS=\((.*?) block/HOOKS=\(\1 encrypt lvm2/" /etc/mkinitcpio.conf
    # Adding block and keyboard before autodetect, avoiding shrinking them
@@ -58,12 +71,17 @@ fi
 mkinitcpio -p linux
 
 # Installing grub
-if [ "$efi_part" != 'null' ]; then
-   grub-install --target=x86_64-efi --recheck --removable --efi-directory=/boot
-fi
-if [ "$bios_dev" != 'null' ]; then
+if [ "$boot_mode" == 'uefi' ]; then
+   grub-install --target=x86_64-efi --recheck --efi-directory=$efi_mnt
+elif [ "$boot_mode" == 'bios' ]; then
+   $bios_dev=$(sed 's/[0-9]//' <<< $enc_part)
+   grub-install --target=i386-pc --recheck --boot-directory=/boot /dev/$bios_dev
+else [ "$bios_dev" != 'null' ]; then
+   grub-install --target=x86_64-efi --recheck --removable --efi-directory=$efi_mnt
+   $bios_dev=$(sed 's/[0-9]//' <<< $enc_part)
    grub-install --target=i386-pc --recheck --boot-directory=/boot /dev/$bios_dev
 fi
+
 # Getting UUID of enc_part
 enc_part_uuid=$(blkid | grep $enc_part | cut -d'"' -f2)
 # Modifying grug config for lvm
@@ -75,6 +93,9 @@ systemctl enable NetworkManager
 systemctl enable bluetooth
 systemctl enable cups
 
+# Input username
+read -p "Username (default=arch): " username
+username=${username:-arch}
 # Adding user
 useradd -m $username
 passwd $username

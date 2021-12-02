@@ -5,39 +5,43 @@ set -o pipefail
 # Exit on error
 set -e
 
-if [ $# -lt 7 ]; then
-   echo 'bash base.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION EFI_PARTITION BIOS_DEVICE SWAP_SIZE'
-   echo 'CPU = amd | intel | both'
-   echo 'EFI_PARTITION can be "null" for a pure BIOS system'
-   echo 'BIOS_PARTITION can be "null" for a pure EFI system'
-   echo 'Set both EFI_PARTITION and BIOS_PARTITION to select an hybrid MBR'
-   echo 'SWAP_SIZE example: 16G'
+if [ $# -lt 3 ]; then
+   echo 'bash base.sh BOOT_MODE BOOT_PARTITION ENCRYPTED_PARTITION [EFI_PARTITION]'
+   echo 'BOOT_MODE = uefi | bios | hybrid'
+   echo 'BOOT_PARTITION is the unencrypted partition where /boot is mounted. Can be equal to EFI_PARTITION'
+   echo 'ENCRYPTED_PARTITION is the encrypted partition where / and swap will be created'
+   echo 'EFI_PARTITION must be specified only for a pure uefi and hybrid boot mode'
    exit 1
 fi
 
-cpu=$1
-username=$2
-hostname=$3
-enc_part=$4
-efi_part=$5
-bios_dev=$6
-swap_size=$7
+boot_mode=$1
+boot_part=$2
+enc_part=$3
 
-if [ "$cpu" == 'amd' ]; then
-   ucode='amd-ucode'
-elif [ "$cpu" == 'intel' ]; then
-   ucode='intel-ucode'
-elif [ "$cpu" == 'both' ]; then
-   ucode='amd-ucode intel-ucode'
-else
-   echo 'bash base.sh CPU USERNAME HOSTNAME ENCRYPTED_PARTITION EFI_PARTITION BIOS_DEVICE'
-   echo 'CPU = amd | intel | both'
-   exit 1
+if [[ "$boot_mode" == 'uefi' or "$boot_mode" == 'hybrid' ]]; then
+   if [ $# -lt 4 ]; then
+      echo 'Required EFI_PARTITION for uefi/hybrid boot mode'
+      exit 1
+   elif [ $# -gt 4 ]; then
+      echo 'Too many parameters'
+      exit 1
+   fi
+   efi_part=$4
+elif [ "$boot_mode" == 'bios' ]; then
+   if [ $# -gt 3 ]; then
+      echo 'Too many parameters'
+      exit 1
+   fi
 fi
+
 
 # Setting up keyboard and time 
 loadkeys it
 timedatectl set-ntp true
+
+# Input swap size
+read -p "Insert swap size (default=4G): " swap_size
+swap_size="${swap_size:-4G}"
 
 # Creating an encrypted container. Choose a password for the container
 cryptsetup luksFormat /dev/$enc_part
@@ -53,18 +57,47 @@ lvcreate -L $swap_size vg1 -n swap
 lvcreate -l 100%FREE vg1 -n root
 
 # Formatting boot and root partitions and making swap
-if [ "$efi_part" != 'null' ]; then
-   mkfs.fat -F32 /dev/$efi_part
-fi
 mkfs.ext4 /dev/vg1/root
 mkswap /dev/vg1/swap
 
-# Mounting the root partition in /mnt and mounting efi partition in /mnt/boot
+# Mounting root, boot and efi (in case available)
 mount /dev/vg1/root /mnt
 mkdir /mnt/boot
-mount /dev/$efi_part /mnt/boot
+if [ "$boot_mode" == "bios"]; then
+   mkfs.ext4 /dev/$boot_part
+   mount /dev/$boot_part /mnt/boot
+   $efi_mnt=''
+else # uefi and hybrid
+   read -p 'Do you want to format the EFI partition? [y/N]' format_efi
+   if [ "$format_efi" == "y" ]; then
+      mkfs.fat -F32 /dev/$efi_part
+   fi
+   if [ $efi_part == $boot_part ]; then
+      mount /dev/$efi_part /mnt/boot
+      $efi_mnt=/boot
+   else
+      mkdir /mnt/boot/EFI
+      mkfs.ext4 /dev/$boot_part
+      mount /dev/$boot_part /mnt/boot
+      mount /dev/$efi_part /mnt/boot/EFI
+      $efi_mnt=/boot/EFI
+   fi
+fi
 # Enabling swap
 swapon /dev/vg1/swap
+
+# Input of ucode
+read -p "Select ucode: amd-ucode (1), intel-ucode (2), both (3)" $ucode_id
+if [ "$ucode_id" == '1' ]; then
+   ucode='amd-ucode'
+elif [ "$ucode_id" == '2' ]; then
+   ucode='intel-ucode'
+elif [ "$ucode_id" == '3' ]; then
+   ucode='amd-ucode intel-ucode'
+else
+   echo 'Wrong ucode id selected'
+   exit 1
+fi
 
 # Installing base packages
 pacstrap /mnt base linux linux-firmware $ucode lvm2
@@ -75,11 +108,12 @@ genfstab -U /mnt >> /mnt/etc/fstab
 cp chroot.sh /mnt/
 chmod +x /mnt/chroot.sh
 # Chrooting into installation
-arch-chroot /mnt ./chroot.sh $username $hostname $enc_part $efi_part $bios_dev
+arch-chroot /mnt ./chroot.sh $boot_mode $enc_part $efi_mnt 
 # Removing chroot.sh
 rm /mnt/chroot.sh
 
 # Copying ArchInstall folder into the previous chroot folder
+$username=$(ls /home/)
 mkdir /mnt/home/$username/Projects
 cp -r ../ArchInstall /mnt/home/$username/Projects
 
