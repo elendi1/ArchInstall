@@ -18,7 +18,7 @@ boot_mode=$1
 boot_part=$2
 enc_part=$3
 
-if [[ "$boot_mode" == 'uefi' or "$boot_mode" == 'hybrid' ]]; then
+if [[ "$boot_mode" == 'uefi' || "$boot_mode" == 'hybrid' ]]; then
    if [ $# -lt 4 ]; then
       echo 'Required EFI_PARTITION for uefi/hybrid boot mode'
       exit 1
@@ -65,7 +65,7 @@ mkdir /mnt/boot
 if [ "$boot_mode" == "bios"]; then
    mkfs.ext4 /dev/$boot_part
    mount /dev/$boot_part /mnt/boot
-   $efi_mnt=''
+   efi_mnt=''
 else # uefi and hybrid
    read -p 'Do you want to format the EFI partition? [y/N]' format_efi
    if [ "$format_efi" == "y" ]; then
@@ -73,20 +73,20 @@ else # uefi and hybrid
    fi
    if [ $efi_part == $boot_part ]; then
       mount /dev/$efi_part /mnt/boot
-      $efi_mnt=/boot
+      efi_mnt='/boot'
    else
-      mkdir /mnt/boot/EFI
       mkfs.ext4 /dev/$boot_part
       mount /dev/$boot_part /mnt/boot
+      mkdir /mnt/boot/EFI
       mount /dev/$efi_part /mnt/boot/EFI
-      $efi_mnt=/boot/EFI
+      efi_mnt='/boot/EFI'
    fi
 fi
 # Enabling swap
 swapon /dev/vg1/swap
 
 # Input of ucode
-read -p "Select ucode: amd-ucode (1), intel-ucode (2), both (3)" $ucode_id
+read -p "Select ucode: amd-ucode (1), intel-ucode (2), both (3)" ucode_id
 if [ "$ucode_id" == '1' ]; then
    ucode='amd-ucode'
 elif [ "$ucode_id" == '2' ]; then
@@ -112,7 +112,7 @@ arch-chroot /mnt ./chroot.sh $boot_mode $enc_part $efi_mnt
 rm /mnt/chroot.sh
 
 # Copying ArchInstall folder into the previous chroot folder
-$username=$(ls /home/)
+username=$(ls /mnt/home/)
 mkdir /mnt/home/$username/Projects
 cp -r ../ArchInstall /mnt/home/$username/Projects
 

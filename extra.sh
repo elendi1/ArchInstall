@@ -52,19 +52,20 @@ sudo pacman -Syu zsh zsh-syntax-highlighting zsh-autosuggestions
 # Setting zsh as default shell
 chsh -s $(which zsh)
 # Installing command line utilities
-sudo pacman -S z fzf fd ripgrep atool xsel ueberzug htop curl wget rsync broot tree clipmenu
+sudo pacman -S z fzf fd ripgrep atool xsel ueberzug htop curl wget rsync broot tree clipmenu stow
 systemctl --user enable clipmenud
 paru -S up-bin
 
 # Installing basic fonts
-sudo pacman -S noto-fonts noto-fonts-cjk ttf-dejavu ttf-liberation
+sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-liberation ttf-nerd-fonts-symbols
 # Installing a nerd font (fira code) and a font for colored emoji
-paru -S nerd-fonts-fira-code noto-fonts-emoji
+paru -S nerd-fonts-fira-code 
 
 # Installing gpu drivers, xorg, feh (to set the wallpaper) and picom
 sudo pacman -S $gpu_drivers xorg-server xorg-xinit xorg-xrandr xorg-xsetroot feh picom
 
 # Installing pipewire and its jack plugin
+# Remember to select wireplumber
 paru -S pipewire pipewire-pulse pipewire-jack pipewire-jack-dropin
 systemctl --user enable wireplumber 
 systemctl --user enable pipewire-pulse
@@ -72,7 +73,7 @@ systemctl --user enable pipewire
 # Optional: control that all is ok with "pactl info"
 
 # Installing basic applications
-pacman -S firefox ranger neovim
+sudo pacman -S firefox ranger neovim
 
 # Optionally installing some gui based applications
 #paru -S nitrogen lxappearance lxsession pcmanfm-gtk3 pavucontrol
@@ -91,14 +92,16 @@ cd ../dmenu
 sudo make clean install
 cd ../st
 sudo make clean install
-cd
 
 # Cloning dotfiles into Progetti and making symbolic links to it
-cd Projects
+cd ~/Projects
 git clone https://github.com/elendi1/Dots.git
 cd Dots
-stow -t ~ fontconfig tmux x_$resolution zsh gtk 
-cd
+if [ "$gpu" != 'virtualbox' ]; then 
+   stow -t ~ fontconfig tmux x_$resolution zsh gtk picom_vb
+else
+   stow -t ~ fontconfig tmux x_$resolution zsh gtk picom
+fi
 
 set +o pipefail
 set +e

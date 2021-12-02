@@ -16,7 +16,7 @@ fi
 boot_mode=$1
 enc_part=$2
 
-if [[ "$boot_mode" == 'uefi' or "$boot_mode" == 'hybrid' ]]; then
+if [[ "$boot_mode" == 'uefi' || "$boot_mode" == 'hybrid' ]]; then
    if [ $# -lt 3 ]; then
       echo 'Required EFI_MNT for uefi/hybrid boot mode'
       exit 1
@@ -77,7 +77,7 @@ if [ "$boot_mode" == 'uefi' ]; then
 elif [ "$boot_mode" == 'bios' ]; then
    $bios_dev=$(sed 's/[0-9]//' <<< $enc_part)
    grub-install --target=i386-pc --recheck --boot-directory=/boot /dev/$bios_dev
-else [ "$bios_dev" != 'null' ]; then
+else # hybrid 
    grub-install --target=x86_64-efi --recheck --removable --efi-directory=$efi_mnt
    $bios_dev=$(sed 's/[0-9]//' <<< $enc_part)
    grub-install --target=i386-pc --recheck --boot-directory=/boot /dev/$bios_dev
