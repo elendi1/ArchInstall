@@ -85,8 +85,10 @@ fi
 
 # Getting UUID of enc_part
 enc_part_uuid=$(blkid | grep $enc_part | cut -d'"' -f2)
-# Modifying grug config for lvm
+# Modifying grub config for lvm
 sed -i "s#GRUB_CMDLINE_LINUX=[\"][\"]#GRUB_CMDLINE_LINUX=\"cryptdevice=UUID=$enc_part_uuid\:cryptlvm root=/dev/vg1/root\"#" /etc/default/grub
+# Enable OS Prober
+echo GRUB_DISABLE_OS_PROBER=false >> /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
 # Enabling NetworkManager, bluetooth and cups
