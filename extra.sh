@@ -93,14 +93,19 @@ sudo make clean install
 cd ../st
 sudo make clean install
 
-# Cloning dotfiles into Progetti and making symbolic links to it
+# Installing lvim dependencies
+sudo pacman -S python-pip python-pynvim
+# Installing lvim
+bash <(curl -s https://raw.githubusercontent.com/lunarvim/lunarvim/master/utils/installer/install.sh)
+
+# Cloning dotfiles into Projects and making symbolic links to it
 cd ~/Projects
 git clone https://github.com/elendi1/Dots.git
 cd Dots
 if [ "$gpu" != 'virtualbox' ]; then 
-   stow -t ~ fontconfig tmux x_$resolution zsh gtk picom_vb
+   stow -t ~ fontconfig tmux x_$resolution zsh gtk picom_vb lvim
 else
-   stow -t ~ fontconfig tmux x_$resolution zsh gtk picom
+   stow -t ~ fontconfig tmux x_$resolution zsh gtk picom lvim
 fi
 
 set +o pipefail
