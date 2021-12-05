@@ -62,12 +62,12 @@ mkswap /dev/vg1/swap
 # Mounting root, boot and efi (in case available)
 mount /dev/vg1/root /mnt
 mkdir /mnt/boot
-if [ "$boot_mode" == "bios"]; then
+if [ "$boot_mode" == "bios" ]; then
    mkfs.ext4 /dev/$boot_part
    mount /dev/$boot_part /mnt/boot
    efi_mnt=''
 else # uefi and hybrid
-   read -p 'Do you want to format the EFI partition? [y/N]' format_efi
+   read -p 'Do you want to format the EFI partition? [y/N]: ' format_efi
    if [ "$format_efi" == "y" ]; then
       mkfs.fat -F32 /dev/$efi_part
    fi
@@ -86,7 +86,7 @@ fi
 swapon /dev/vg1/swap
 
 # Input of ucode
-read -p "Select ucode: amd-ucode (1), intel-ucode (2), both (3)" ucode_id
+read -p "Select ucode: amd-ucode (1), intel-ucode (2), both (3): " ucode_id
 if [ "$ucode_id" == '1' ]; then
    ucode='amd-ucode'
 elif [ "$ucode_id" == '2' ]; then

@@ -75,11 +75,11 @@ mkinitcpio -p linux
 if [ "$boot_mode" == 'uefi' ]; then
    grub-install --target=x86_64-efi --recheck --efi-directory=$efi_mnt
 elif [ "$boot_mode" == 'bios' ]; then
-   $bios_dev=$(sed 's/[0-9]//' <<< $enc_part)
+   bios_dev=$(sed 's/[0-9]//' <<< $enc_part)
    grub-install --target=i386-pc --recheck --boot-directory=/boot /dev/$bios_dev
 else # hybrid 
    grub-install --target=x86_64-efi --recheck --removable --efi-directory=$efi_mnt
-   $bios_dev=$(sed 's/[0-9]//' <<< $enc_part)
+   bios_dev=$(sed 's/[0-9]//' <<< $enc_part)
    grub-install --target=i386-pc --recheck --boot-directory=/boot /dev/$bios_dev
 fi
 
