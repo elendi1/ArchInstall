@@ -52,7 +52,7 @@ sudo pacman -Syu zsh zsh-syntax-highlighting zsh-autosuggestions
 # Setting zsh as default shell
 chsh -s $(which zsh)
 # Installing command line utilities
-sudo pacman -S z fzf fd ripgrep atool xsel ueberzug htop curl wget rsync broot tree clipmenu stow
+sudo pacman -S z fzf fd ripgrep atool xsel ueberzug htop curl wget rsync broot tree clipmenu stow tmux
 systemctl --user enable clipmenud
 paru -S up-bin
 
