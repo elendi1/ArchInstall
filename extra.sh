@@ -97,6 +97,11 @@ sudo make clean install
 sudo pacman -S python-pip python-pynvim
 # Installing lvim
 bash <(curl -s https://raw.githubusercontent.com/lunarvim/lunarvim/master/utils/installer/install.sh)
+# Removing config file. It will be replaced by the symlink in the dots
+rm ~/.config/lvim/config.lua
+
+# Installing Bitwig-Studio and its dependency
+paru -S libxkbcommon-x11 bitwig-studio
 
 # Cloning dotfiles into Projects and making symbolic links to it
 cd ~/Projects
