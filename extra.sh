@@ -84,6 +84,7 @@ git clone https://github.com/elendi1/dwm.git
 git clone https://github.com/elendi1/dwmstatus.git
 git clone https://github.com/elendi1/dmenu.git
 git clone https://github.com/elendi1/st.git
+git clone https://github.com/koiosdev/Tokyo-Night-Linux.git
 cd dwm
 sudo make clean install
 cd ../dwmstatus
@@ -92,6 +93,8 @@ cd ../dmenu
 sudo make clean install
 cd ../st
 sudo make clean install
+cd ../Tokyo-Night-Linux
+sudo stow -t / usr
 
 # Installing lvim dependencies
 sudo pacman -S python-pip python-pynvim
@@ -102,6 +105,9 @@ rm ~/.config/lvim/config.lua
 
 # Installing Bitwig-Studio and its dependency
 paru -S libxkbcommon-x11 bitwig-studio
+
+# Dependency of ReAmp Studio
+sudo pacman -S libcurl-gnutls
 
 # Cloning dotfiles into Projects and making symbolic links to it
 cd ~/Projects
