@@ -57,8 +57,18 @@ fi
 # Creating a root logical volume with the remaining space
 lvcreate -l 100%FREE vg1 -n root
 
-# Formatting boot and root partitions and making swap (in case greater than 0)
-mkfs.ext4 /dev/vg1/root
+# Asking if the device is slow (usb pen or sd card)
+if [ "$boot_mode" == 'hybrid' ]; then
+   read -p "Do you want to disable ext4 journaling, move systemd journaling to ram and set up other fixes for slow usb drives? [y, N]: " slow
+fi
+# Formatting root partition
+if [ "$slow" == 'y' ]; then
+   mkfs.ext4 -O "^has_journal" /dev/vg1/root
+else
+   mkfs.ext4 /dev/vg1/root
+fi
+
+# Making swap (in case greater than 0) 
 if [ "$swap_size" != '0' ]; then
    mkswap /dev/vg1/swap
 fi

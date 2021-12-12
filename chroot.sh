@@ -108,5 +108,12 @@ sed -i "s/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/" /etc/sudoers
 
 localectl set-keymap --no-convert it
 
+# On slow speed usb devices where journaling was disabled, move systemd journaling to RAM and disable fsync and friends for firefox
+if [ -z $(debugfs -R features /dev/sda1 | grep has_journal) ]; then
+   echo -e '[Journal]\nStorage=volatile\nRuntimeMaxUse=30M' > /etc/systemd/journald.conf.d/usbstick.conf
+   pacman -S libeatmydata
+   eatmydata firefox
+fi
+
 set +o pipefail
 set +e
