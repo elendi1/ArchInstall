@@ -40,12 +40,12 @@ git config --global user.name "$git_username"
 git config --global user.email "$git_email"
 git config --global credential.helper store
 
-# Installing paru
-git clone https://aur.archlinux.org/paru.git
-cd paru
+# Installing pikaur
+git clone https://aur.archlinux.org/pikaur.git
+cd pikaur
 makepkg -si
 cd ..
-rm -rf paru
+rm -rf pikaur
 
 # Installing zsh and fish-like plugins
 sudo pacman -Syu zsh zsh-syntax-highlighting zsh-autosuggestions
@@ -54,19 +54,23 @@ chsh -s $(which zsh)
 # Installing command line utilities
 sudo pacman -S z fzf fd ripgrep atool xsel ueberzug htop curl wget rsync broot tree clipmenu stow tmux
 systemctl --user enable clipmenud
-paru -S up-bin
+pikaur -S up-bin
 
 # Installing basic fonts
-sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-liberation ttf-nerd-fonts-symbols
+sudo pacman -S noto-fonts noto-fonts-emoji ttf-dejavu ttf-liberation ttf-nerd-fonts-symbols
+read -p "Do you want to install noto-fonts-cjk? [y/N]: " cjk
+if [ "$cjk" == 'y' ]; then
+   pacman -S noto-fonts-cjk
+fi
 # Installing a nerd font (fira code) and a font for colored emoji
-paru -S nerd-fonts-fira-code 
+pikaur -S nerd-fonts-fira-code 
 
 # Installing gpu drivers, xorg, feh (to set the wallpaper) and picom
 sudo pacman -S $gpu_drivers xorg-server xorg-xinit xorg-xrandr xorg-xsetroot feh picom
 
 # Installing pipewire and its jack plugin
 # Remember to select wireplumber
-paru -S pipewire pipewire-pulse pipewire-jack pipewire-jack-dropin
+pikaur -S pipewire pipewire-pulse pipewire-jack pipewire-jack-dropin
 systemctl --user enable wireplumber 
 systemctl --user enable pipewire-pulse
 systemctl --user enable pipewire
@@ -76,7 +80,7 @@ systemctl --user enable pipewire
 sudo pacman -S firefox ranger neovim
 
 # Optionally installing some gui based applications
-#paru -S nitrogen lxappearance lxsession pcmanfm-gtk3 pavucontrol
+#pikaur -S nitrogen lxappearance lxsession pcmanfm-gtk3 pavucontrol
 
 # Installing suckless tools
 cd ~/Projects
@@ -93,8 +97,10 @@ cd ../dmenu
 sudo make clean install
 cd ../st
 sudo make clean install
-cd ../Tokyo-Night-Linux
-sudo stow -t / usr
+cd ..
+mkdir /usr/share/themes/TokyoNight
+cp -r Tokyo-Night-Linux/chrome Tokyo-Night-Linux/gtk* /usr/share/themes/TokyoNight
+rm -rf Tokyo-Night-Linux
 
 # Installing lvim dependencies
 sudo pacman -S python-pip python-pynvim
@@ -103,11 +109,17 @@ bash <(curl -s https://raw.githubusercontent.com/lunarvim/lunarvim/master/utils/
 # Removing config file. It will be replaced by the symlink in the dots
 rm ~/.config/lvim/config.lua
 
-# Installing Bitwig-Studio and its dependency
-paru -S libxkbcommon-x11 bitwig-studio
+read -p "Do you want to install Bitwig?" bitwig
+if [ "$bitwig" == 'y' ]; then
+   # Installing Bitwig-Studio and its dependency
+   pikaur -S libxkbcommon-x11 bitwig-studio
+fi
 
-# Dependency of ReAmp Studio
-sudo pacman -S libcurl-gnutls
+read -p "Do you want to install Reamp Studio?" reamp
+if [ "$reamp" == 'y' ]; then
+   # Dependency of ReAmp Studio
+   pacman -S llibcurl-gnutls
+fi
 
 # Cloning dotfiles into Projects and making symbolic links to it
 cd ~/Projects
@@ -118,6 +130,8 @@ if [ "$gpu" != 'virtualbox' ]; then
 else
    stow -t ~ fontconfig tmux x_$resolution zsh gtk picom lvim
 fi
+
+pacman -Scc
 
 set +o pipefail
 set +e

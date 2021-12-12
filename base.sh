@@ -39,7 +39,7 @@ loadkeys it
 timedatectl set-ntp true
 
 # Input swap size
-read -p "Insert swap size (default=4G): " swap_size
+read -p "Insert swap partition size (default=4G, 0 to avoid swap partition creation): " swap_size
 swap_size="${swap_size:-4G}"
 
 # Creating an encrypted container. Choose a password for the container
@@ -50,14 +50,18 @@ cryptsetup open /dev/$enc_part cryptlvm
 pvcreate /dev/mapper/cryptlvm
 # Creating the volume group
 vgcreate vg1 /dev/mapper/cryptlvm
-# Creating a swap logical volume of swap_size
-lvcreate -L $swap_size vg1 -n swap
+if [ "$swap_size" != '0' ]; then
+   # Creating a swap logical volume of swap_size
+   lvcreate -L $swap_size vg1 -n swap
+fi
 # Creating a root logical volume with the remaining space
 lvcreate -l 100%FREE vg1 -n root
 
-# Formatting boot and root partitions and making swap
+# Formatting boot and root partitions and making swap (in case greater than 0)
 mkfs.ext4 /dev/vg1/root
-mkswap /dev/vg1/swap
+if [ "$swap_size" != '0' ]; then
+   mkswap /dev/vg1/swap
+fi
 
 # Mounting root, boot and efi (in case available)
 mount /dev/vg1/root /mnt
@@ -82,8 +86,11 @@ else # uefi and hybrid
       efi_mnt='/boot/EFI'
    fi
 fi
-# Enabling swap
-swapon /dev/vg1/swap
+
+if [ "$swap_size" != '0' ]; then
+   # Enabling swap
+   swapon /dev/vg1/swap
+fi
 
 # Input of ucode
 read -p "Select ucode: amd-ucode (1), intel-ucode (2), both (3): " ucode_id

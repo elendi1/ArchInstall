@@ -22,6 +22,7 @@ if [ "$mbr" == 'efi' ]; then
 elif [ "$mbr" == 'bios' ]; then
    sgdisk -Z /dev/$disk
    sgdisk -n 0:0:+1MiB -t 0:ef02 -c 0:bios /dev/$disk
+   sgdisk -n 0:0:+200MiB -t 0:8e00 -c 0:boot /dev/$disk
    sgdisk -n 0:0:0 -t 0:8e00 -c 0:root /dev/$disk
    exit 1
 elif [ "$mbr" == 'hybrid' ]; then
