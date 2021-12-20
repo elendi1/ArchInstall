@@ -99,7 +99,7 @@ cd ../st
 sudo make clean install
 cd ..
 mkdir /usr/share/themes/TokyoNight
-cp -r Tokyo-Night-Linux/chrome Tokyo-Night-Linux/gtk* /usr/share/themes/TokyoNight
+cp -r Tokyo-Night-Linux/usr/share/themes/TokyoNight/chrome Tokyo-Night-Linux/usr/share/themes/TokyoNight/gtk* /usr/share/themes/TokyoNight
 rm -rf Tokyo-Night-Linux
 
 # Installing lvim dependencies
