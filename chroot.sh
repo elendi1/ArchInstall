@@ -36,6 +36,7 @@ fi
 ln -sf /usr/share/zoneinfo/Europe/Rome /etc/localtime
 # Syncronize hardware clock to system clock
 hwclock --systohc
+timedatectl set-ntp true
 
 # Setting up locale
 sed -i 's/#it_IT.UTF-8 UTF-8/it_IT.UTF-8 UTF-8/' /etc/locale.gen

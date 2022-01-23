@@ -52,7 +52,7 @@ sudo pacman -Syu zsh zsh-syntax-highlighting zsh-autosuggestions
 # Setting zsh as default shell
 chsh -s $(which zsh)
 # Installing command line utilities
-sudo pacman -S z fzf fd ripgrep atool xsel ueberzug htop curl wget rsync broot tree clipmenu stow tmux
+sudo pacman -S z fzf fd ripgrep atool xsel ueberzug htop curl wget rsync broot tree clipmenu stow tmux openssh
 systemctl --user enable clipmenud
 pikaur -S up-bin
 
@@ -79,8 +79,8 @@ systemctl --user enable pipewire
 # Installing basic applications
 sudo pacman -S firefox ranger neovim
 
-# Optionally installing some gui based applications
-#pikaur -S nitrogen lxappearance lxsession pcmanfm-gtk3 pavucontrol
+# Installing audio/video basic tools
+sudo pacman -S mpv youtube-dl
 
 # Installing suckless tools
 cd ~/Projects
@@ -109,13 +109,18 @@ bash <(curl -s https://raw.githubusercontent.com/lunarvim/lunarvim/master/utils/
 # Removing config file. It will be replaced by the symlink in the dots
 rm ~/.config/lvim/config.lua
 
+# Installing rootless podman
+sudo touch /etc/subuid /etc/subgid
+sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 $USERNAME
+podman system migrate
+
 read -p "Do you want to install Bitwig?" bitwig
 if [ "$bitwig" == 'y' ]; then
    # Installing Bitwig-Studio and its dependency
    pikaur -S libxkbcommon-x11 bitwig-studio
 fi
 
-read -p "Do you want to install Reamp Studio?" reamp
+read -p "Do you want to install Reamp Studio dependencies?" reamp
 if [ "$reamp" == 'y' ]; then
    # Dependency of ReAmp Studio
    pacman -S llibcurl-gnutls
