@@ -70,7 +70,7 @@ sudo pacman -S $gpu_drivers xorg-server xorg-xinit xorg-xrandr xorg-xsetroot feh
 
 # Installing pipewire and its jack plugin
 # Remember to select wireplumber
-pikaur -S pipewire pipewire-pulse pipewire-jack pipewire-jack-dropin
+pikaur -S pipewire pipewire-pulse pipewire-jack
 systemctl --user enable wireplumber 
 systemctl --user enable pipewire-pulse
 systemctl --user enable pipewire
