@@ -131,9 +131,9 @@ cd ~/Projects
 git clone https://github.com/elendi1/Dots.git
 cd Dots
 if [ "$gpu" != 'virtualbox' ]; then 
-   stow -t ~ fontconfig tmux x_$resolution zsh gtk picom_vb lvim
+   stow -t ~ fontconfig tmux x_$resolution zsh gtk picom_vb localbin
 else
-   stow -t ~ fontconfig tmux x_$resolution zsh gtk picom lvim
+   stow -t ~ fontconfig tmux x_$resolution zsh gtk picom localbin
 fi
 
 pacman -Scc
