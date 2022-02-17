@@ -88,6 +88,7 @@ git clone https://github.com/elendi1/dwm.git
 git clone https://github.com/elendi1/dwmstatus.git
 git clone https://github.com/elendi1/dmenu.git
 git clone https://github.com/elendi1/st.git
+git clone https://git.suckless.org/slock
 git clone https://github.com/koiosdev/Tokyo-Night-Linux.git
 cd dwm
 sudo make clean install
@@ -101,6 +102,11 @@ cd ..
 mkdir /usr/share/themes/TokyoNight
 cp -r Tokyo-Night-Linux/usr/share/themes/TokyoNight/chrome Tokyo-Night-Linux/usr/share/themes/TokyoNight/gtk* /usr/share/themes/TokyoNight
 rm -rf Tokyo-Night-Linux
+cd slock
+sed -i "s/nobody/$USERNAME" config.def.h
+sed -i "s/nogroup/$USERNAME" config.def.h
+sudo make clean install
+cd ..
 
 # Installing lvim dependencies
 sudo pacman -S python-pip python-pynvim
